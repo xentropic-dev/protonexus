@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const zap = @import("zap");
 const queue = @import("concurrent_queue.zig");
 const opc = @import("open62541");
@@ -54,17 +55,23 @@ pub fn opcWorkerThread() !void {
     std.debug.print("Opc thread exiting\n", .{});
 }
 
+fn getPublicFolder() []const u8 {
+    if (builtin.mode == .Debug) return "client/protonexus/dist";
+    return "public";
+}
 pub fn zapWorkerThread() !void {
     try setupRoutes(std.heap.page_allocator);
+    const public_dir = getPublicFolder();
     var listener = zap.HttpListener.init(.{
         .port = 3000,
         .on_request = dispatch_routes,
-        .public_folder = "client/protonexus/dist",
+        .public_folder = public_dir,
         .log = true,
     });
     try listener.listen();
 
     std.debug.print("Listening on 0.0.0.0:3000\n", .{});
+    std.debug.print("Serving static files from {s}", .{public_dir});
     zap.start(.{
         .threads = 1,
         .workers = 1,
