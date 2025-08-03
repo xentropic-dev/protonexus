@@ -1,0 +1,12 @@
+*~
+.*.swp
+.swp
+*.log
+.DS_Store
+.vscode/
+.direnv/
+.envrc.local
+.flatpak-builder/
+zig-cache/
+.zig-cache/
+zig-out/
