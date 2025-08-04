@@ -45,9 +45,12 @@ pub fn build(b: *std.Build) void {
 
     const opc = b.dependency("open62541", .{ .target = target, .optimize = optimize });
 
+    const conman = b.dependency("conman", .{ .target = target, .optimize = optimize });
+
     exe.root_module.addImport("open62541", opc.module("open62541"));
     exe.root_module.addImport("zap", zap.module("zap"));
     exe.root_module.addImport("nexlog", nexlog.module("nexlog"));
+    exe.root_module.addImport("conman", conman.module("conman"));
 
     // Required for TLS in open62541
     // TODO: Figure out how to link these for windows.
