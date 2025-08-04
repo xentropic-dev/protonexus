@@ -3,10 +3,17 @@
     .version = "0.0.0",
     .fingerprint = 0xc884a7dd260dd773, // Changing this has security and trust implications.
     .minimum_zig_version = "0.14.0",
-    .dependencies = .{ .zap = .{
-        .url = "git+https://github.com/zigzap/zap.git#a385bea1edecc4f4ab9116150bc9dca9f44f9595",
-        .hash = "zap-0.10.6-GoeB89aDJAAUufiqV7sUCudCoSSCle0E2fbw388bO1Ug",
-    }, .open62541 = .{ .path = "./pkg/open62541" } },
+    .dependencies = .{
+        .zap = .{
+            .url = "git+https://github.com/zigzap/zap.git#a385bea1edecc4f4ab9116150bc9dca9f44f9595",
+            .hash = "zap-0.10.6-GoeB89aDJAAUufiqV7sUCudCoSSCle0E2fbw388bO1Ug",
+        },
+        .open62541 = .{ .path = "./pkg/open62541" },
+        .nexlog = .{
+            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        },
+    },
     .paths = .{
         "build.zig",
         "build.zig.zon",

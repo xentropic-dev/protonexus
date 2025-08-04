@@ -3,6 +3,7 @@ const builtin = @import("builtin");
 const zap = @import("zap");
 const queue = @import("concurrent_queue.zig");
 const opc = @import("open62541");
+const nexlog = @import("nexlog");
 
 var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 var running = std.atomic.Value(bool).init(false);
@@ -20,7 +21,7 @@ fn dispatch_routes(r: zap.Request) !void {
     std.debug.print("No route found for path: {s}\n", .{r.path.?});
 }
 
-pub fn opcWorkerThread() !void {
+pub fn opcWorkerThread(logger: *nexlog.Logger) !void {
     var config: opc.UA_ServerConfig = .{};
     const ret_val = opc.UA_ServerConfig_setDefault(&config);
     if (ret_val != opc.UA_STATUSCODE_GOOD) {
@@ -28,11 +29,11 @@ pub fn opcWorkerThread() !void {
     }
     config.applicationDescription.applicationUri = opc.UA_String_fromChars("urn:example:application");
     // output the application Name
-    std.debug.print("Application Uri: {s}\n", .{config.applicationDescription.applicationUri.data});
+    logger.info("Application Uri: {s}", .{config.applicationDescription.applicationUri.data}, nexlog.here(@src()));
     const config_ptr: [*c]opc.UA_ServerConfig = @ptrCast(&config);
     const server = opc.UA_Server_newWithConfig(config_ptr);
 
-    std.debug.print("Creating OPC UA server...\n", .{});
+    logger.info("Creating OPC UA server.", .{}, nexlog.here(@src()));
     if (server) |s| {
         var status: opc.UA_StatusCode = 0;
         defer status = opc.UA_Server_delete(s);
@@ -42,7 +43,7 @@ pub fn opcWorkerThread() !void {
             return error.ServerRunFailed;
         }
 
-        std.debug.print("Server is running...\n", .{});
+        logger.info("OPC server is running", .{}, nexlog.here(@src()));
 
         while (running.load(.seq_cst)) {
             // no op
@@ -52,14 +53,14 @@ pub fn opcWorkerThread() !void {
         return error.ServerCreationFailed;
     }
 
-    std.debug.print("Opc thread exiting\n", .{});
+    logger.info("OPC thread is exiting", .{}, nexlog.here(@src()));
 }
 
 fn getPublicFolder() []const u8 {
     if (builtin.mode == .Debug) return "client/protonexus/dist";
     return "public";
 }
-pub fn zapWorkerThread() !void {
+pub fn zapWorkerThread(logger: *nexlog.Logger) !void {
     try setupRoutes(std.heap.page_allocator);
     const public_dir = getPublicFolder();
     var listener = zap.HttpListener.init(.{
@@ -70,19 +71,19 @@ pub fn zapWorkerThread() !void {
     });
     try listener.listen();
 
-    std.debug.print("Listening on 0.0.0.0:3000\n", .{});
-    std.debug.print("Serving static files from {s}", .{public_dir});
+    logger.info("Listening on 0.0.0.0:3000", .{}, nexlog.here(@src()));
+    logger.info("Serving static files from: {s}", .{public_dir}, nexlog.here(@src()));
     zap.start(.{
         .threads = 1,
         .workers = 1,
     });
 }
 
-pub fn myWorkerThread() !void {
+pub fn myWorkerThread(logger: *nexlog.Logger) !void {
+    logger.info("Worker thread started", .{}, nexlog.here(@src()));
     while (running.load(.seq_cst)) {
         // handle requests
         std.time.sleep(1 * std.time.ns_per_s); // simulate work
-        std.debug.print("Worker thread is running...\n", .{});
         // increment a counter
         var value = counter.load(.seq_cst);
         value += 1;
@@ -90,7 +91,7 @@ pub fn myWorkerThread() !void {
         try my_queue.enqueue("Test");
         try my_queue.enqueue("Safe travels my friend");
     }
-    std.debug.print("Worker thread is exiting..\n", .{});
+    logger.info("Worker thread exiting", .{}, nexlog.here(@src()));
 }
 
 fn info(r: zap.Request) !void {
@@ -153,15 +154,20 @@ pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
 pub fn main() !void {
     // start worker threads
     // start new thread
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    defer _ = gpa.deinit();
+    const allocator = gpa.allocator();
+    const logger = try nexlog.Logger.init(allocator, .{});
+    defer logger.deinit();
     running.store(true, .seq_cst);
     start_time.store(std.time.milliTimestamp(), .seq_cst);
-    var zapThread = try std.Thread.spawn(.{}, zapWorkerThread, .{});
-    var myThread = try std.Thread.spawn(.{}, myWorkerThread, .{});
-    var opcThread = try std.Thread.spawn(.{}, opcWorkerThread, .{});
+    var zapThread = try std.Thread.spawn(.{}, zapWorkerThread, .{logger});
+    var myThread = try std.Thread.spawn(.{}, myWorkerThread, .{logger});
+    var opcThread = try std.Thread.spawn(.{}, opcWorkerThread, .{logger});
     defer myThread.join();
     defer zapThread.join();
     defer opcThread.join();
-    std.debug.print("Worker threads started.\n", .{});
+    logger.info("Worker threaders started.", .{}, nexlog.here(@src()));
 
     const action = std.posix.Sigaction{
         .handler = .{ .handler = handleSigInter },
@@ -173,8 +179,9 @@ pub fn main() !void {
         std.time.sleep(100 * std.time.ns_per_ms); // sleep to reduce CPU usage
         while (my_queue.count() > 0) {
             const msg = try my_queue.dequeue();
-            std.debug.print("{s}\n", .{msg});
+
+            logger.info("Message received: {s}", .{msg}, nexlog.here(@src()));
         }
     }
-    std.debug.print("Main thread exiting...\n", .{});
+    logger.info("Main thread exiting...", .{}, nexlog.here(@src()));
 }
