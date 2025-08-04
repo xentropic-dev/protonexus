@@ -16,6 +16,16 @@ const DemoCommand = struct {
     verb: []const u8,
 };
 
+const RandomNumberQuery = struct {
+    min: i32,
+    max: i32,
+};
+
+const RandomNumberQueryResponse = struct {
+    value: i32,
+    ok: bool,
+};
+
 fn dispatch_routes(r: zap.Request) !void {
     if (r.path) |the_path| {
         if (routes.get(the_path)) |foo| {
@@ -132,6 +142,16 @@ pub fn myWorkerThread(logger: *nexlog.Logger) !void {
         counter.store(value, .seq_cst);
         try mediator.send_notification(DemoCommand, .{ .id = count, .verb = commands[count % 2] });
         count = count + 1;
+
+        logger.info("Requesting random number", .{}, nexlog.here(@src()));
+
+        const response = try mediator.query_registry.query(
+            RandomNumberQuery,
+            RandomNumberQueryResponse,
+            RandomNumberQuery{ .min = 0, .max = 100 },
+        );
+
+        logger.info("Received random number: {d}", .{response.value}, nexlog.here(@src()));
     }
     logger.info("Worker thread exiting", .{}, nexlog.here(@src()));
 }
@@ -215,6 +235,21 @@ pub const std_options: std.Options = .{
     .log_level = .debug,
 };
 
+pub fn HandleRandomNumberQuery(query: RandomNumberQuery) RandomNumberQueryResponse {
+    const min = query.min;
+    const max = query.max;
+
+    if (min > max) {
+        return RandomNumberQueryResponse{ .value = min, .ok = false };
+    }
+
+    const rand = std.crypto.random;
+    const range: i32 = @intCast(max - min + 1);
+    const r = rand.intRangeAtMost(i32, 0, range - 1) + min;
+
+    return RandomNumberQueryResponse{ .value = r, .ok = true };
+}
+
 pub fn main() !void {
     // start worker threads
     // start new thread
@@ -247,6 +282,13 @@ pub fn main() !void {
 
     std.posix.sigaction(std.posix.SIG.INT, &action, null);
     const notification_queue = try mediator.register_notification_handler(DemoCommand);
+
+    _ = try mediator.query_registry.register_handler(
+        RandomNumberQuery,
+        RandomNumberQueryResponse,
+        1024,
+    );
+
     var verbosity: u64 = 0;
     var messages_to_read: u64 = 5;
     while (running.load(.seq_cst) and messages_to_read > 0) {
@@ -272,6 +314,8 @@ pub fn main() !void {
                 }
             }
         }
+
+        try mediator.query_registry.processQueryHandlers(RandomNumberQuery, RandomNumberQueryResponse, HandleRandomNumberQuery);
     }
 
     logger.info("UNREGISTERING HANDLER", .{}, nexlog.here(@src()));

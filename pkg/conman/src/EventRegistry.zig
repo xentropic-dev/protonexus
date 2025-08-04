@@ -4,7 +4,7 @@
 const std = @import("std");
 const concurrency = @import("concurrency.zig");
 
-const QueueRegistry = @This();
+const EventRegistry = @This();
 
 /// A hashmap of stringified types to corresonding queues
 registries: std.StringHashMap(std.ArrayList(*anyopaque)),
@@ -13,11 +13,11 @@ registries: std.StringHashMap(std.ArrayList(*anyopaque)),
 allocator: std.mem.Allocator,
 
 mutex: std.Thread.Mutex,
-pub fn init(allocator: std.mem.Allocator) QueueRegistry {
-    return QueueRegistry{ .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator), .allocator = allocator, .mutex = std.Thread.Mutex{} };
+pub fn init(allocator: std.mem.Allocator) EventRegistry {
+    return EventRegistry{ .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator), .allocator = allocator, .mutex = std.Thread.Mutex{} };
 }
 
-pub fn register_handler(self: *QueueRegistry, comptime T: type, capacity: usize) !*concurrency.RingBufferConcurrentQueue(T) {
+pub fn register_handler(self: *EventRegistry, comptime T: type, capacity: usize) !*concurrency.RingBufferConcurrentQueue(T) {
     // TODO: I think this needs be cleaned up in deinit with self.allocator.destroy
     self.mutex.lock();
     defer self.mutex.unlock();
@@ -33,7 +33,7 @@ pub fn register_handler(self: *QueueRegistry, comptime T: type, capacity: usize)
 }
 
 /// Unregisters the queue and destroys the pointer.  Pointer will be freed!
-pub fn unregister_handler(self: *QueueRegistry, comptime T: type, handler_queue: *concurrency.RingBufferConcurrentQueue(T)) void {
+pub fn unregister_handler(self: *EventRegistry, comptime T: type, handler_queue: *concurrency.RingBufferConcurrentQueue(T)) void {
     self.mutex.lock();
     defer self.mutex.unlock();
     const key = @typeName(T);
@@ -49,7 +49,7 @@ pub fn unregister_handler(self: *QueueRegistry, comptime T: type, handler_queue:
     }
 }
 
-pub fn send(self: *QueueRegistry, comptime T: type, message: T) !void {
+pub fn send(self: *EventRegistry, comptime T: type, message: T) !void {
     self.mutex.lock();
     defer self.mutex.unlock();
     const key = @typeName(T);
@@ -70,6 +70,6 @@ pub fn send(self: *QueueRegistry, comptime T: type, message: T) !void {
     }
 }
 
-pub fn deinit(self: *QueueRegistry) void {
+pub fn deinit(self: *EventRegistry) void {
     self.registries.deinit();
 }

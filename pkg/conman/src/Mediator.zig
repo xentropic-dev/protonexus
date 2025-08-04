@@ -1,16 +1,22 @@
 const std = @import("std");
 const concurrency = @import("concurrency.zig");
-const QueueRegistry = @import("QueueRegistry.zig");
+const EventRegistry = @import("EventRegistry.zig");
+const QueryRegistry = @import("QueryRegistry.zig");
 const Mediator = @This();
 
-notification_registry: QueueRegistry,
+notification_registry: EventRegistry,
+query_registry: QueryRegistry,
 /// The allocator used to provision new queues
 allocator: std.mem.Allocator,
 queue_size: usize,
-mutex: std.Thread.Mutex,
 
 pub fn init(allocator: std.mem.Allocator, queue_size: usize) Mediator {
-    return Mediator{ .notification_registry = QueueRegistry.init(allocator), .allocator = allocator, .queue_size = queue_size, .mutex = std.Thread.Mutex{} };
+    return Mediator{
+        .notification_registry = EventRegistry.init(allocator),
+        .query_registry = QueryRegistry.init(allocator),
+        .allocator = allocator,
+        .queue_size = queue_size,
+    };
 }
 
 pub fn deinit(self: *Mediator) void {
