@@ -1,0 +1,12 @@
+.{
+    .name = .conman,
+    .version = "0.0.0",
+    .fingerprint = 0x69daf231e18a13fa,
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
