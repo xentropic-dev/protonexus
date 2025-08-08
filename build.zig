@@ -44,6 +44,7 @@ pub fn build(b: *std.Build) void {
     });
 
     const opc = b.dependency("open62541", .{ .target = target, .optimize = optimize });
+    const mbedtls = b.dependency("libmbedtls", .{ .target = target, .optimize = optimize });
 
     const conman = b.dependency("conman", .{ .target = target, .optimize = optimize });
 
@@ -51,13 +52,16 @@ pub fn build(b: *std.Build) void {
     exe.root_module.addImport("zap", zap.module("zap"));
     exe.root_module.addImport("nexlog", nexlog.module("nexlog"));
     exe.root_module.addImport("conman", conman.module("conman"));
+    exe.linkLibrary(mbedtls.artifact("mbedtls"));
+    exe.linkLibrary(mbedtls.artifact("mbedcrypto"));
+    exe.linkLibrary(mbedtls.artifact("mbedx509"));
 
     // Required for TLS in open62541
     // TODO: Figure out how to link these for windows.
-    exe.linkSystemLibrary("mbedtls");
-    exe.linkSystemLibrary("mbedx509");
-    exe.linkSystemLibrary("mbedcrypto");
-
+    // exe.linkSystemLibrary("mbedtls");
+    // exe.linkSystemLibrary("mbedx509");
+    // exe.linkSystemLibrary("mbedcrypto");
+    //
     b.installArtifact(exe);
 
     const run_cmd = b.addRunArtifact(exe);

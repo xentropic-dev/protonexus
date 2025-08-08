@@ -9,6 +9,7 @@
             .hash = "zap-0.10.6-GoeB89aDJAAUufiqV7sUCudCoSSCle0E2fbw388bO1Ug",
         },
         .open62541 = .{ .path = "./pkg/open62541" },
+        .libmbedtls = .{ .path = "./pkg/libmbedtls" },
         .conman = .{ .path = "./pkg/conman" },
         .nexlog = .{
             .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",

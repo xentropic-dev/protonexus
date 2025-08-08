@@ -1,0 +1,4 @@
+[submodule "pkg/libmbedtls/vendor"]
+	path = pkg/libmbedtls/vendor
+	url = https://github.com/Mbed-TLS/mbedtls.git
+	branch = main
