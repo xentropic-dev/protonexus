@@ -23,6 +23,10 @@ pub fn build(b: *std.Build) void {
 
     lib.addCSourceFile(.{
         .file = b.path("vendor/open62541.c"),
+        .flags = &.{
+            "-D__DATE__=\"1970-01-01\"",
+            "-D__TIME__=\"00:00:00\"",
+        },
     });
     lib.addIncludePath(mbedtls.path("vendor/include"));
     lib.addIncludePath(b.path("vendor"));

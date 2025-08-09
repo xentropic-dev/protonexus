@@ -15,6 +15,10 @@
             .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
             .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
         },
+        .tokamak = .{
+            .url = "git+https://github.com/cztomsik/tokamak?ref=main#7d078792d1269cb485e02de6dab9e4d164400026",
+            .hash = "tokamak-2.0.0-FbnSeQZgBQDz3jjumUkqMR1Lr_Gq-lPhZ3Onwvik6O2-",
+        },
     },
     .paths = .{
         "build.zig",
