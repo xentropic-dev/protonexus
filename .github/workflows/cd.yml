@@ -86,21 +86,9 @@ jobs:
           Copy-Item zig-out\bin\protonexus.exe artifact\protonexus\
           Copy-Item -Recurse -Force client\protonexus\dist artifact\protonexus\public
 
-      - name: Package protonexus.zip (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          cd artifact/protonexus
-          zip -r ../protonexus.zip ./*
-
-      - name: Package protonexus.zip (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          Compress-Archive -Path artifact\protonexus\* -DestinationPath artifact\protonexus.zip -Force
-
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ runner.os }}-protonexus
-          path: artifact/protonexus.zip
+          path: artifact
 
