@@ -76,6 +76,12 @@ jobs:
       - name: Prepare
         run: |
           ${{ matrix.install-deps }}
-      - name: Run tests
+      - name: Run zig tests
         run: |
           zig build test --summary all
+      - name: Run client tests
+        run: |
+          cd client/protonexus
+          npm ci
+          npm run test
+
