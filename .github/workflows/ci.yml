@@ -23,6 +23,7 @@ jobs:
               Remove-Item -Path ".\zig-windows.zip"
               Rename-Item -Path ".\$version" -NewName ".\zig"
               Write-Host "Zig installed."
+              Add-Content -Path $env:GITHUB_ENV -Value "PATH=.\zig\`;$env:PATH"
               .\zig\zig.exe version
     steps:
       - uses: actions/checkout@v4
