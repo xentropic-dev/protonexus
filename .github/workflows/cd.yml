@@ -51,31 +51,55 @@ jobs:
         run: |
           ${{ matrix.install-deps }}
 
-      - name: Build web assets
+      - name: Build web assets (Linux)
         if: runner.os == 'Linux'
         run: |
-          cd client/protonexus 
+          cd client/protonexus
           npm ci
           npm run build
-          mkdir -p $GITHUB_WORKSPACE/zig-out/dist
-          cp -r dist/* $GITHUB_WORKSPACE/zig-out/dist/
-          
+
       - name: Build web assets (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          cd client/protonexus 
+          cd client/protonexus
           npm ci
           npm run build
-          New-Item -ItemType Directory -Force -Path $env:GITHUB_WORKSPACE\zig-out\dist
-          Copy-Item -Path .\dist\* -Destination $env:GITHUB_WORKSPACE\zig-out\dist -Recurse -Force
 
       - name: Build executable
         run: zig build --release=small 
 
+      - name: Prepare artifact staging directory (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          rm -rf artifact/protonexus
+          mkdir -p artifact/protonexus
+          cp -r zig-out/bin artifact/protonexus/
+          cp -r client/protonexus/dist artifact/protonexus/public
+
+      - name: Prepare artifact staging directory (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Remove-Item -Recurse -Force artifact\protonexus -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path artifact\protonexus
+          Copy-Item -Recurse -Force zig-out\bin artifact\protonexus\
+          Copy-Item -Recurse -Force client\protonexus\dist artifact\protonexus\public
+
+      - name: Package protonexus.zip (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          cd artifact
+          zip -r protonexus.zip protonexus
+
+      - name: Package protonexus.zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          Compress-Archive -Path artifact\protonexus -DestinationPath artifact\protonexus.zip -Force
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ runner.os }}-zig-binary
-          path: zig-out/bin/*
-
+          name: ${{ runner.os }}-protonexus
+          path: artifact/protonexus.zip
