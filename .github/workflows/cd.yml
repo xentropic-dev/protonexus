@@ -2,8 +2,7 @@ name: Build and Publish
 on:
   push:
     branches:
-    - "**"
-      # - main
+      - main
 
 env:
   ZIG_VERSION: 0.14.1
