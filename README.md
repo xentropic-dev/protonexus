@@ -29,16 +29,16 @@ zig translate-c with few modifications to get around struct packed bitfields,
 which are not currently supported by transport-c and needed to be manually 
 created.
 
-open65241 requires libmbedtls, which must be linked in the final EXE and installed
-on the host system at this time.  The mbedtls library is used for
-TLS/SSL support in the OPC server.
+open65241 requires libmbedtls.  We build libmbedtls internally in our build
+pipeline and everything works cross-plaform on linux, windows, and macos.
+
+You just need to make sure to pull in git sub modules, as do not copy 3rd
+party code for libmbedtls directly into the repo since we want to stay current
+with their main branch.
 
 ```bash
-sudo apt update
-sudo apt install libmbedtls-dev
+git submodule update --init --recursive --remote
 ```
-
-TODO: need to figure hout how to link this on Windows and MacOS.
 
 ### Frontend
 
