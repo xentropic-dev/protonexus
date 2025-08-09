@@ -3,6 +3,26 @@ const builtin = @import("builtin");
 const opc = @import("open62541");
 const nexlog = @import("nexlog");
 const Mediator = @import("conman").Mediator;
+const tk = @import("tokamak");
+
+const static_path = if (builtin.mode == .Debug) "client/protonexus/dist" else "public";
+
+const App = struct {
+    server: tk.Server,
+    server_opts: tk.ServerOptions = .{
+        .listen = .{
+            .port = 42069,
+        }
+    },
+    routes: []const tk.Route = &.{
+        .get("/*", tk.static.dir(static_path, .{})),
+        .get("/api/hello", hello),
+    },
+
+    fn hello() ![]const u8 {
+        return "Hello, world!";
+    }
+};
 
 var running = std.atomic.Value(bool).init(false);
 var start_time = std.atomic.Value(i64).init(0);
@@ -159,16 +179,24 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
+
     const logger = try nexlog.Logger.init(allocator, .{ .min_level = .info });
     global_logger = logger;
     defer logger.deinit();
     running.store(true, .seq_cst);
     start_time.store(std.time.milliTimestamp(), .seq_cst);
-    // var zapThread = try std.Thread.spawn(.{}, zapWorkerThread, .{logger});
+
+    const ct = try tk.Container.init(gpa.allocator(), &.{App});
+    defer ct.deinit();
+
+    const server = try ct.injector.get(*tk.Server);
+    // const port = server.http.config.port.?;
+    const apiThread = try server.http.listenInNewThread();
+    defer apiThread.join();
+
     var myThread = try std.Thread.spawn(.{}, myWorkerThread, .{logger});
     var opcThread = try std.Thread.spawn(.{}, opcWorkerThread, .{logger});
     defer myThread.join();
-    // defer zapThread.join();
     defer opcThread.join();
     logger.info("Worker threaders started.", .{}, nexlog.here(@src()));
     std.log.debug("TEST", .{});
@@ -234,10 +262,12 @@ pub fn main() !void {
     }
 
     logger.info("UNREGISTERING HANDLER", .{}, nexlog.here(@src()));
-    mediator.notification_registry.unregisterHandler (DemoCommand, notification_queue);
+    mediator.notification_registry.unregisterHandler(DemoCommand, notification_queue);
 
     while (running.load(.seq_cst)) {
         std.Thread.sleep(std.time.ns_per_s);
     }
     logger.info("Main thread exiting...", .{}, nexlog.here(@src()));
+
+    server.stop();
 }

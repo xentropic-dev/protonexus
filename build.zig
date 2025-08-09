@@ -1,4 +1,5 @@
 const std = @import("std");
+const tokamak = @import("tokamak");
 
 pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
@@ -32,6 +33,9 @@ pub fn build(b: *std.Build) void {
         .root_module = exe_mod,
     });
 
+    tokamak.setup(exe, .{
+    });
+
     const nexlog = b.dependency("nexlog", .{
         .target = target,
         .optimize = optimize,
@@ -56,7 +60,6 @@ pub fn build(b: *std.Build) void {
     // exe.linkSystemLibrary("mbedcrypto");
     //
     b.installArtifact(exe);
-
 
     if (exe.rootModuleTarget().os.tag == .windows) {
         exe.linkSystemLibrary("ws2_32");
