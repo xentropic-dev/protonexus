@@ -17,7 +17,7 @@ jobs:
         include:
           - os: ubuntu-latest
             install-deps: |
-              version="zig-x86_64-windows-$ZIG_VERSION"
+              version="zig-x86_64-linux-$ZIG_VERSION"
               echo "$version"
               uri="https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
               curl $uri -o zig-linux.tar.xz
@@ -29,9 +29,9 @@ jobs:
               zig version
           - os: windows-latest
             install-deps: |
-              $version = "zig-x86_64-windows-$ZIG_VERSION"
+              $version = "zig-x86_64-windows-$env:ZIG_VERSION"
               Write-Output $version
-              $uri = "https://ziglang.org/download/$ZIG_VERSION/$version.zip"
+              $uri = "https://ziglang.org/download/$env:ZIG_VERSION/$version.zip"
               Invoke-WebRequest -Uri "$uri" -OutFile ".\zig-windows.zip"
               Expand-Archive -Path ".\zig-windows.zip" -DestinationPath ".\" -Force
               Remove-Item -Path ".\zig-windows.zip"
