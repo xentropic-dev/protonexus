@@ -47,6 +47,10 @@ jobs:
         with:
           submodules: recursive
 
+      - name: Prepare
+        run: |
+          ${{ matrix.install-deps }}
+
       - name: Build executable
         run: zig build --release=small 
 
