@@ -6,7 +6,7 @@ const testing = std.testing;
 const domain = @import("domain");
 
 pub export fn add(a: i32, b: i32) i32 {
-    return domain.add(a, b);
+    return domain.addb(a, b);
 }
 
 
