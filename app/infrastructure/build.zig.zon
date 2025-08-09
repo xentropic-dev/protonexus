@@ -6,6 +6,12 @@
     .dependencies = .{
         .application = .{ .path = "../application" },
         .domain = .{ .path = "../domain" },
+        .conman = .{ .path = "../../pkg/conman" },
+        .open62541 = .{ .path = "../../pkg/open62541" },
+        .nexlog = .{
+            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        },
     },
     .paths = .{
         "build.zig",

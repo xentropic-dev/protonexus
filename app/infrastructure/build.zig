@@ -24,6 +24,14 @@ pub fn build(b: *std.Build) void {
         module.addImport(layer_name, dep.module(layer_name));
     }
 
+    const opc = b.dependency("open62541", .{ .target = target, .optimize = optimize });
+    const conman = b.dependency("conman", .{ .target = target, .optimize = optimize });
+    const nexlog = b.dependency("nexlog", .{ .target = target, .optimize = optimize });
+    module.addImport("open62541", opc.module("open62541"));
+    module.addImport("nexlog", nexlog.module("nexlog"));
+    module.addImport("conman", conman.module("conman"));
+
+
     // Add test executable
     const tests = b.addTest(.{
         .name = "infrastructure-tests",
