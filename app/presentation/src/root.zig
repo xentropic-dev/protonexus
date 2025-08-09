@@ -12,8 +12,6 @@ const StopSignal = @import("application").control.StopSignal;
 
 var stop_signal: StopSignal = StopSignal.init();
 const static_path = if (builtin.mode == .Debug) "client/protonexus/dist" else "public";
-var start_time = std.atomic.Value(i64).init(0);
-var counter = std.atomic.Value(u64).init(0);
 var mediator: Mediator = Mediator.init(std.heap.page_allocator, 1024);
 // SAFETY: global_logger is initialized early in main() before use,
 // and is never accessed before being assigned a valid pointer.
@@ -93,7 +91,6 @@ pub fn start() !void {
     const logger = try nexlog.Logger.init(allocator, .{ .min_level = .info });
     global_logger = logger;
     defer logger.deinit();
-    start_time.store(std.time.milliTimestamp(), .seq_cst);
 
     const ct = try tk.Container.init(gpa.allocator(), &.{App});
     defer ct.deinit();
