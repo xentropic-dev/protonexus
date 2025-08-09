@@ -19,7 +19,7 @@ jobs:
             install-deps: |
               version="zig-x86_64-windows-$ZIG_VERSION"
               echo "$version"
-              uri = "https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
+              uri="https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
               curl $uri -o zig-linux.tar.xz
               tar -xf zig-linux.tar.xz 
               rm zig-linux.tar.xz
