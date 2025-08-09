@@ -23,10 +23,10 @@ pub fn deinit(self: *Mediator) void {
     self.notification_registry.deinit();
 }
 
-pub fn register_notification_handler(self: *Mediator, comptime T: type) !*concurrency.RingBufferConcurrentQueue(T) {
-    return try self.notification_registry.register_handler(T, self.queue_size);
+pub fn registerNotificationHandler(self: *Mediator, comptime T: type) !*concurrency.RingBufferConcurrentQueue(T) {
+    return self.notification_registry.register_handler(T, self.queue_size);
 }
 
-pub fn send_notification(self: *Mediator, comptime T: type, notification: T) !void {
+pub fn sendNotification(self: *Mediator, comptime T: type, notification: T) !void {
     try self.notification_registry.send(T, notification);
 }

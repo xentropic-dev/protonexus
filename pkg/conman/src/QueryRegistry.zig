@@ -7,7 +7,11 @@ registries: std.StringHashMap(std.ArrayList(*anyopaque)),
 mutex: std.Thread.Mutex,
 
 pub fn init(allocator: std.mem.Allocator) QueryRegistry {
-    return QueryRegistry{ .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator), .allocator = allocator, .mutex = std.Thread.Mutex{} };
+    return QueryRegistry{
+        .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator),
+        .allocator = allocator,
+        .mutex = std.Thread.Mutex{},
+    };
 }
 
 pub fn query(
@@ -23,7 +27,11 @@ pub fn query(
         // round robin, load balancing, etc, for now assume first queue in array
         if (queue_array.items.len == 0) return error.NoRegisteredQueue;
         const queue_ptr = queue_array.items[0];
-        const handler_queue: *concurrency.RingBufferConcurrentQueue(QueryContext(T, R)) = @ptrCast(@alignCast(queue_ptr));
+        const handler_queue: *concurrency.RingBufferConcurrentQueue(
+            QueryContext(T, R),
+        ) = @ptrCast(
+            @alignCast(queue_ptr),
+        );
         var response_queue = try concurrency.RingBufferConcurrentQueue(R).init(self.allocator, 1);
         defer response_queue.deinit(self.allocator);
 
@@ -51,7 +59,7 @@ pub fn query(
     }
 }
 
-pub fn register_handler(
+pub fn registerHandler(
     self: *QueryRegistry,
     comptime T: type,
     comptime R: type,

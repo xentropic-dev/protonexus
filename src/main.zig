@@ -4,7 +4,6 @@ const opc = @import("open62541");
 const nexlog = @import("nexlog");
 const Mediator = @import("conman").Mediator;
 
-
 // var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 var running = std.atomic.Value(bool).init(false);
 var start_time = std.atomic.Value(i64).init(0);
@@ -26,35 +25,6 @@ const RandomNumberQueryResponse = struct {
     ok: bool,
 };
 
-// fn dispatch_routes(r: zap.Request) !void {
-//     if (r.path) |the_path| {
-//         if (routes.get(the_path)) |foo| {
-//             try foo(r);
-//             return;
-//         }
-//     }
-//     std.debug.print("No route found for path: {s}\n", .{r.path.?});
-// }
-// pub fn global_log2(hmm: ?*anyopaque, log_level: c_uint, b: c_uint, msg: [*c]const u8, args: [*c]opc.struct___va_list_tag_13) callconv(.c) void {
-//     _ = hmm;
-//     // _ = a;
-//     _ = b;
-//     _ = args;
-//
-//     if (msg) |format_str| {
-//         // This would require proper va_list handling which is complex in Zig
-//         // For now, just log the format string
-//         const format_slice = std.mem.span(format_str);
-//         switch (log_level) {
-//             opc.UA_LOGLEVEL_DEBUG => std.log.debug("OPC: {s}", .{format_slice}),
-//             opc.UA_LOGLEVEL_INFO => std.log.info("OPC: {s}", .{format_slice}),
-//             opc.UA_LOGLEVEL_WARNING => std.log.warn("OPC: {s}", .{format_slice}),
-//             opc.UA_LOGLEVEL_ERROR => std.log.err("OPC: {s}", .{format_slice}),
-//             else => std.log.err("OPC: {s}", .{format_slice}),
-//         }
-//     }
-// }
-//
 pub fn opcWorkerThread(logger: *nexlog.Logger) !void {
     var config: opc.UA_ServerConfig = .{};
     const ret_val = opc.UA_ServerConfig_setDefault(&config);
@@ -62,10 +32,6 @@ pub fn opcWorkerThread(logger: *nexlog.Logger) !void {
         return error.ServerConfigFailed;
     }
     config.applicationDescription.applicationUri = opc.UA_String_fromChars("urn:example:application");
-    // config.logging.* = .{
-    //     .log = global_log2,
-    // };
-    // output the application Name
     logger.info("Application Uri: {s}", .{config.applicationDescription.applicationUri.data}, nexlog.here(@src()));
     const config_ptr: [*c]opc.UA_ServerConfig = @ptrCast(&config);
     const server = opc.UA_Server_newWithConfig(config_ptr);
@@ -109,25 +75,6 @@ fn getPublicFolder() []const u8 {
     if (builtin.mode == .Debug) return "client/protonexus/dist";
     return "public";
 }
-// pub fn zapWorkerThread(logger: *nexlog.Logger) !void {
-//     try setupRoutes(std.heap.page_allocator);
-//     const public_dir = getPublicFolder();
-//     var listener = zap.HttpListener.init(.{
-//         .port = 3000,
-//         .on_request = dispatch_routes,
-//         .public_folder = public_dir,
-//         .log = true,
-//     });
-//     try listener.listen();
-//
-//     logger.info("Listening on 0.0.0.0:3000", .{}, nexlog.here(@src()));
-//     logger.info("Serving static files from: {s}", .{public_dir}, nexlog.here(@src()));
-//
-//     zap.start(.{
-//         .threads = 1,
-//         .workers = 1,
-//     });
-// }
 
 pub fn myWorkerThread(logger: *nexlog.Logger) !void {
     logger.info("Worker thread started", .{}, nexlog.here(@src()));
@@ -156,51 +103,6 @@ pub fn myWorkerThread(logger: *nexlog.Logger) !void {
     logger.info("Worker thread exiting", .{}, nexlog.here(@src()));
 }
 
-// fn info(r: zap.Request) !void {
-//     const currentTime = std.time.milliTimestamp();
-//     const startTime = start_time.load(.seq_cst);
-//     const uptimeMillis = currentTime - startTime;
-//     const counterValue = counter.load(.seq_cst);
-//
-//     const response = .{
-//         .uptime = uptimeMillis,
-//         .count = counterValue,
-//     };
-//     var string = std.ArrayList(u8).init(std.heap.page_allocator);
-//     try std.json.stringify(response, .{}, string.writer());
-//     try r.sendJson(string.items);
-// }
-// fn hello(r: zap.Request) !void {
-//     const response = .{
-//         .message = "Hello, World!",
-//     };
-//     var string = std.ArrayList(u8).init(std.heap.page_allocator);
-//     try std.json.stringify(response, .{}, string.writer());
-//     try r.sendJson(string.items);
-// }
-//
-// fn goodbye(r: zap.Request) !void {
-//     const response = .{
-//         .message = "Goodbye, World!",
-//     };
-//     var string = std.ArrayList(u8).init(std.heap.page_allocator);
-//     try std.json.stringify(response, .{}, string.writer());
-//     try r.sendJson(string.items);
-// }
-// pub fn setupRoutes(a: std.mem.Allocator) !void {
-//     // setup routes
-//     routes = std.StringHashMap(zap.HttpRequestFn).init(a);
-//     try routes.put("/api/hello", hello);
-//     try routes.put("/api/goodbye", goodbye);
-//     try routes.put("/api/info", info);
-//     std.debug.print("Setup routes:\n", .{});
-//
-//     var it = routes.iterator();
-//     while (it.next()) |item| {
-//         std.debug.print("  {s} -> {}\n", .{ item.key_ptr.*, item.value_ptr.* });
-//     }
-// }
-
 pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
     if (sig_num != std.posix.SIG.INT) {
         return;
@@ -217,7 +119,7 @@ pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
 // and is never accessed before being assigned a valid pointer.
 var global_logger: *nexlog.Logger = undefined;
 
-pub fn global_log(
+pub fn globalLog(
     comptime message_level: std.log.Level,
     comptime scope: @TypeOf(.enum_literal),
     comptime format: []const u8,
@@ -233,11 +135,11 @@ pub fn global_log(
 }
 
 pub const std_options: std.Options = .{
-    .logFn = global_log,
+    .logFn = globalLog,
     .log_level = .debug,
 };
 
-pub fn HandleRandomNumberQuery(query: RandomNumberQuery) RandomNumberQueryResponse {
+pub fn handleRandomNumberQuery(query: RandomNumberQuery) RandomNumberQueryResponse {
     const min = query.min;
     const max = query.max;
 
@@ -277,8 +179,7 @@ pub fn main() !void {
     std.log.debug("debug", .{});
 
     // TODO: This needs to be crossplatform
-    switch (comptime builtin.target.os.tag)
-    {
+    switch (comptime builtin.target.os.tag) {
         .linux => {
             const action = std.posix.Sigaction{
                 .handler = .{ .handler = handleSigInter },
@@ -292,7 +193,7 @@ pub fn main() !void {
         },
         else => @compileError("Unsupported OS"),
     }
-   const notification_queue = try mediator.register_notification_handler(DemoCommand);
+    const notification_queue = try mediator.register_notification_handler(DemoCommand);
 
     _ = try mediator.query_registry.register_handler(
         RandomNumberQuery,
@@ -326,7 +227,11 @@ pub fn main() !void {
             }
         }
 
-        try mediator.query_registry.processQueryHandlers(RandomNumberQuery, RandomNumberQueryResponse, HandleRandomNumberQuery);
+        try mediator.query_registry.processQueryHandlers(
+            RandomNumberQuery,
+            RandomNumberQueryResponse,
+            handleRandomNumberQuery,
+        );
     }
 
     logger.info("UNREGISTERING HANDLER", .{}, nexlog.here(@src()));
