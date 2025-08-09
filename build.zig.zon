@@ -4,6 +4,7 @@
     .fingerprint = 0xc884a7dd260dd773, // Changing this has security and trust implications.
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
+        .conman = .{ .path = "./pkg/conman" },
         .presentation = .{ .path = "./app/presentation" },
         .application = .{ .path = "./app/application" },
         .infrastructure = .{ .path = "./app/infrastructure" },

@@ -28,6 +28,7 @@ pub fn build(b: *std.Build) void {
         "infrastructure",
         "application",
         "presentation",
+        "conman",
     };
 
     const test_step = b.step("test", "Run unit tests");
@@ -35,8 +36,6 @@ pub fn build(b: *std.Build) void {
     for (layer_dependencies) |layer_name| {
         const dep = b.dependency(layer_name, common_opts);
         exe.root_module.addImport(layer_name, dep.module(layer_name));
-
-
 
         const dep_test = b.addTest(.{
             .name=layer_name,
