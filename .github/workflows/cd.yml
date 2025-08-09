@@ -51,6 +51,25 @@ jobs:
         run: |
           ${{ matrix.install-deps }}
 
+      - name: Build web assets
+        if: runner.os == 'Linux'
+        run: |
+          cd path/to/your/project
+          npm ci
+          npm run build
+          mkdir -p $GITHUB_WORKSPACE/zig-out/dist
+          cp -r dist/* $GITHUB_WORKSPACE/zig-out/dist/
+          
+      - name: Build web assets (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd path\to\your\project
+          npm ci
+          npm run build
+          New-Item -ItemType Directory -Force -Path $env:GITHUB_WORKSPACE\zig-out\dist
+          Copy-Item -Path .\dist\* -Destination $env:GITHUB_WORKSPACE\zig-out\dist -Recurse -Force
+
       - name: Build executable
         run: zig build --release=small 
 
