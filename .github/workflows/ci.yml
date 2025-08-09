@@ -26,6 +26,9 @@ jobs:
               .\zig\zig.exe version
     steps:
       - uses: actions/checkout@v4
+      - name: Prepare
+        run: |
+          ${{ matrix.install-deps }}
       - name: Run tests
         run: |
           zig build test --summary all
