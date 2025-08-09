@@ -4,17 +4,14 @@
     .fingerprint = 0xc884a7dd260dd773, // Changing this has security and trust implications.
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
-        .zap = .{
-            .url = "git+https://github.com/zigzap/zap.git#a385bea1edecc4f4ab9116150bc9dca9f44f9595",
-            .hash = "zap-0.10.6-GoeB89aDJAAUufiqV7sUCudCoSSCle0E2fbw388bO1Ug",
-        },
-        .open62541 = .{ .path = "./pkg/open62541" },
-        .libmbedtls = .{ .path = "./pkg/libmbedtls" },
-        .conman = .{ .path = "./pkg/conman" },
-        .nexlog = .{
-            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
-            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
-        },
+        // .open62541 = .{ .path = "./pkg/open62541" },
+        // .libmbedtls = .{ .path = "./pkg/libmbedtls" },
+        // .conman = .{ .path = "./pkg/conman" },
+        .presentation = .{ .path = "./app/presentation" },
+        // .nexlog = .{
+        //     .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+        //     .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        // },
         .tokamak = .{
             .url = "git+https://github.com/cztomsik/tokamak?ref=main#7d078792d1269cb485e02de6dab9e4d164400026",
             .hash = "tokamak-2.0.0-FbnSeQZgBQDz3jjumUkqMR1Lr_Gq-lPhZ3Onwvik6O2-",

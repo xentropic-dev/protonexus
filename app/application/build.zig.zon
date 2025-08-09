@@ -1,0 +1,14 @@
+.{
+    .name = .application,
+    .version = "0.0.0",
+    .fingerprint = 0xa45bddc1c21144b3, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        .domain = .{ .path = "../domain" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

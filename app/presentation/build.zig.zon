@@ -1,0 +1,27 @@
+.{
+    .name = .presentation,
+    .version = "0.0.0",
+    .fingerprint = 0x9b66e8937f52cf48, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        .open62541 = .{ .path = "../../pkg/open62541" },
+        .libmbedtls = .{ .path = "../../pkg/libmbedtls" },
+        .conman = .{ .path = "../../pkg/conman" },
+        .nexlog = .{
+            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        },
+        .tokamak = .{
+            .url = "git+https://github.com/cztomsik/tokamak?ref=main#7d078792d1269cb485e02de6dab9e4d164400026",
+            .hash = "tokamak-2.0.0-FbnSeQZgBQDz3jjumUkqMR1Lr_Gq-lPhZ3Onwvik6O2-",
+        },
+        .application = .{ .path = "../application" },
+        .domain = .{ .path = "../domain" },
+        .infrastructure = .{ .path = "../infrastructure" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
