@@ -24,7 +24,7 @@ pub fn deinit(self: *Mediator) void {
 }
 
 pub fn registerNotificationHandler(self: *Mediator, comptime T: type) !*concurrency.RingBufferConcurrentQueue(T) {
-    return self.notification_registry.register_handler(T, self.queue_size);
+    return self.notification_registry.registerHandler(T, self.queue_size);
 }
 
 pub fn sendNotification(self: *Mediator, comptime T: type, notification: T) !void {

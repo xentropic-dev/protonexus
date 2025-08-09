@@ -4,7 +4,6 @@ const opc = @import("open62541");
 const nexlog = @import("nexlog");
 const Mediator = @import("conman").Mediator;
 
-// var routes: std.StringHashMap(zap.HttpRequestFn) = undefined;
 var running = std.atomic.Value(bool).init(false);
 var start_time = std.atomic.Value(i64).init(0);
 var counter = std.atomic.Value(u64).init(0);
@@ -87,7 +86,7 @@ pub fn myWorkerThread(logger: *nexlog.Logger) !void {
         var value = counter.load(.seq_cst);
         value += 1;
         counter.store(value, .seq_cst);
-        try mediator.send_notification(DemoCommand, .{ .id = count, .verb = commands[count % 2] });
+        try mediator.sendNotification(DemoCommand, .{ .id = count, .verb = commands[count % 2] });
         count = count + 1;
 
         logger.info("Requesting random number", .{}, nexlog.here(@src()));
@@ -193,9 +192,9 @@ pub fn main() !void {
         },
         else => @compileError("Unsupported OS"),
     }
-    const notification_queue = try mediator.register_notification_handler(DemoCommand);
+    const notification_queue = try mediator.registerNotificationHandler(DemoCommand);
 
-    _ = try mediator.query_registry.register_handler(
+    _ = try mediator.query_registry.registerHandler(
         RandomNumberQuery,
         RandomNumberQueryResponse,
         1024,
@@ -235,7 +234,7 @@ pub fn main() !void {
     }
 
     logger.info("UNREGISTERING HANDLER", .{}, nexlog.here(@src()));
-    mediator.notification_registry.unregister_handler(DemoCommand, notification_queue);
+    mediator.notification_registry.unregisterHandler (DemoCommand, notification_queue);
 
     while (running.load(.seq_cst)) {
         std.Thread.sleep(std.time.ns_per_s);
