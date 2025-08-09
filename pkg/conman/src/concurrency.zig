@@ -17,7 +17,11 @@ pub fn ArrayListConcurrentQueue(comptime T: type) type {
         semaphore: std.Thread.Semaphore,
 
         pub fn init(allocator: std.mem.Allocator) Self {
-            return Self{ .queue = std.ArrayList(T).init(allocator), .mutex = std.Thread.Mutex{}, .semaphore = std.Thread.Semaphore{} };
+            return Self{
+                .queue = std.ArrayList(T).init(allocator),
+                .mutex = std.Thread.Mutex{},
+                .semaphore = std.Thread.Semaphore{},
+            };
         }
 
         pub fn deinit(self: *Self) void {
@@ -69,7 +73,11 @@ pub fn RingBufferConcurrentQueue(comptime T: type) type {
         semaphore: std.Thread.Semaphore,
 
         pub fn init(allocator: std.mem.Allocator, capacity: usize) !Self {
-            return Self{ .ring = try std.RingBuffer.init(allocator, capacity * @sizeOf(T)), .mutex = std.Thread.Mutex{}, .semaphore = std.Thread.Semaphore{} };
+            return Self{
+                .ring = try std.RingBuffer.init(allocator, capacity * @sizeOf(T)),
+                .mutex = std.Thread.Mutex{},
+                .semaphore = std.Thread.Semaphore{},
+            };
         }
 
         pub fn deinit(self: *Self, allocator: std.mem.Allocator) void {
@@ -100,6 +108,9 @@ pub fn RingBufferConcurrentQueue(comptime T: type) type {
             defer self.mutex.unlock();
             if (self.ring.isEmpty()) return error.QueueEmpty;
 
+            // SAFETY: The semaphore ensures there is an item available in the queue,
+            // so reading uninitialized `item` bytes here is safe as they will be
+            // immediately overwritten by `readFirst`.
             var item: T = undefined;
             const itemBytes = std.mem.asBytes(&item);
 

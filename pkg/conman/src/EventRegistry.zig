@@ -14,10 +14,18 @@ allocator: std.mem.Allocator,
 
 mutex: std.Thread.Mutex,
 pub fn init(allocator: std.mem.Allocator) EventRegistry {
-    return EventRegistry{ .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator), .allocator = allocator, .mutex = std.Thread.Mutex{} };
+    return EventRegistry{
+        .registries = std.StringHashMap(std.ArrayList(*anyopaque)).init(allocator),
+        .allocator = allocator,
+        .mutex = std.Thread.Mutex{},
+    };
 }
 
-pub fn register_handler(self: *EventRegistry, comptime T: type, capacity: usize) !*concurrency.RingBufferConcurrentQueue(T) {
+pub fn registerHandler(
+    self: *EventRegistry,
+    comptime T: type,
+    capacity: usize,
+) !*concurrency.RingBufferConcurrentQueue(T) {
     // TODO: I think this needs be cleaned up in deinit with self.allocator.destroy
     self.mutex.lock();
     defer self.mutex.unlock();
@@ -33,7 +41,11 @@ pub fn register_handler(self: *EventRegistry, comptime T: type, capacity: usize)
 }
 
 /// Unregisters the queue and destroys the pointer.  Pointer will be freed!
-pub fn unregister_handler(self: *EventRegistry, comptime T: type, handler_queue: *concurrency.RingBufferConcurrentQueue(T)) void {
+pub fn unregisterHandler(
+    self: *EventRegistry,
+    comptime T: type,
+    handler_queue: *concurrency.RingBufferConcurrentQueue(T),
+) void {
     self.mutex.lock();
     defer self.mutex.unlock();
     const key = @typeName(T);
