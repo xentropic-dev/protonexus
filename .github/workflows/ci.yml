@@ -24,6 +24,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
         include:
           - os: ubuntu-latest
             install-deps: |
@@ -49,6 +50,19 @@ jobs:
               Write-Host "Zig installed."
               Add-Content -Path $env:GITHUB_ENV -Value "PATH=.\zig\`;$env:PATH"
               .\zig\zig.exe version
+          - os: macos-latest
+            install-deps: |
+              version="zig-x86_64-macos-$ZIG_VERSION"
+              echo "$version"
+              uri="https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
+              curl $uri -o zig-macos.tar.xz
+              tar -xf zig-macos.tar.xz 
+              rm zig-macos.tar.xz
+              mv $version zig
+              echo "Zig installed"
+              echo "$PWD/zig/" >> $GITHUB_PATH
+              ./zig/zig version
+ 
     steps:
       - uses: actions/checkout@v4
         with:
