@@ -15,6 +15,13 @@ jobs:
 
       - name: Run zlint
         run: zlint
+
+      - name: Run eslint
+        run: |
+          cd client/protonexus
+          npm ci
+          npm run lint
+
   unit_tests:
     name: Unit Tests
     runs-on: ${{ matrix.os }}
