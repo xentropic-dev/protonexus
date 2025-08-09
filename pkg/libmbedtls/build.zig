@@ -141,8 +141,11 @@ pub fn build(b: *std.Build) void {
     };
 
     lib_mbedtls.addCSourceFiles(.{ .files = &lib_mbedtls_source_files });
+    lib_mbedtls.addIncludePath(b.path("vendor/include"));
     lib_mbedcrypto.addCSourceFiles(.{ .files = &lib_mbedcrypto_source_files });
+    lib_mbedcrypto.addIncludePath(b.path("vendor/include"));
     lib_mbedx509.addCSourceFiles(.{ .files = &lib_mbedx509_source_files });
+    lib_mbedx509.addIncludePath(b.path("vendor/include"));
     b.installArtifact(lib_mbedtls);
     b.installArtifact(lib_mbedcrypto);
     b.installArtifact(lib_mbedx509);

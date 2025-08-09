@@ -32,12 +32,6 @@ pub fn build(b: *std.Build) void {
         .root_module = exe_mod,
     });
 
-    const zap = b.dependency("zap", .{
-        .target = target,
-        .optimize = optimize,
-        .openssl = false, // set to true to enable TLS support
-    });
-
     const nexlog = b.dependency("nexlog", .{
         .target = target,
         .optimize = optimize,
@@ -49,7 +43,6 @@ pub fn build(b: *std.Build) void {
     const conman = b.dependency("conman", .{ .target = target, .optimize = optimize });
 
     exe.root_module.addImport("open62541", opc.module("open62541"));
-    exe.root_module.addImport("zap", zap.module("zap"));
     exe.root_module.addImport("nexlog", nexlog.module("nexlog"));
     exe.root_module.addImport("conman", conman.module("conman"));
     exe.linkLibrary(mbedtls.artifact("mbedtls"));
@@ -63,6 +56,13 @@ pub fn build(b: *std.Build) void {
     // exe.linkSystemLibrary("mbedcrypto");
     //
     b.installArtifact(exe);
+
+
+    if (exe.rootModuleTarget().os.tag == .windows) {
+        exe.linkSystemLibrary("ws2_32");
+        exe.linkSystemLibrary("iphlpapi"); // optional but often needed
+        exe.linkSystemLibrary("bcrypt");
+    }
 
     const run_cmd = b.addRunArtifact(exe);
 
