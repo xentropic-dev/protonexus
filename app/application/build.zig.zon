@@ -5,6 +5,11 @@
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .domain = .{ .path = "../domain" },
+        .conman = .{ .path = "../../pkg/conman" },
+        .nexlog = .{
+            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        },
     },
     .paths = .{
         "build.zig",

@@ -7,6 +7,7 @@ pub const commands = @import("commands.zig");
 pub const queries = @import("queries.zig");
 pub const events = @import("events.zig");
 pub const control = @import("control.zig");
+pub const services = @import("services.zig");
 
 
 

@@ -37,7 +37,7 @@ pub fn isSet(self: *const StopSignal) bool {
 
 pub const WaitForStopOptions = struct {
     /// Time in milliseconds to wait for stop.  undefined for never
-    timeout: ?i64 = undefined,
+    timeout: ?i64,
 };
 
 /// Blocks by spinning until a stop request is detected.
@@ -87,7 +87,7 @@ test "isSet returns correct state after multiple calls" {
     try std.testing.expect(!sig.isSet());
 }
 
-fn test_thread_fn(stop_signal: *StopSignal) void {
+fn cancelThread(stop_signal: *StopSignal) void {
     std.Thread.sleep(10 * std.time.ns_per_ms);
     stop_signal.requestStop();
 }
@@ -95,7 +95,7 @@ fn test_thread_fn(stop_signal: *StopSignal) void {
 test "waitForStop returns after requestStop" {
     var sig = StopSignal.init();
 
-    var thread = try std.Thread.spawn(.{}, test_thread_fn, .{&sig});
+    var thread = try std.Thread.spawn(.{}, cancelThread, .{&sig});
     defer thread.join();
 
     try sig.waitForStop(.{

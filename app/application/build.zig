@@ -9,7 +9,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     };
 
-    const application = b.addModule("application", .{
+    const module = b.addModule("application", .{
         .root_source_file = b.path("src/root.zig"),
         .target = target,
         .optimize = optimize,
@@ -21,8 +21,13 @@ pub fn build(b: *std.Build) void {
 
     for (layer_dependencies) |layer_name| {
         const dep = b.dependency(layer_name, common_opts);
-        application.addImport(layer_name, dep.module(layer_name));
+        module.addImport(layer_name, dep.module(layer_name));
     }
+
+    const conman = b.dependency("conman", .{ .target = target, .optimize = optimize });
+    const nexlog = b.dependency("nexlog", .{ .target = target, .optimize = optimize });
+    module.addImport("nexlog", nexlog.module("nexlog"));
+    module.addImport("conman", conman.module("conman"));
 
     // Add test executable
     const tests = b.addTest(.{

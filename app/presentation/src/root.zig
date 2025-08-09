@@ -7,11 +7,17 @@ const tk = @import("tokamak");
 const commands = @import("application").commands;
 const queries = @import("application").queries;
 const OpcService = @import("infrastructure").OpcService;
+const ExampleWorker = @import("application").services.ExampleWorker;
 const StopSignal = @import("application").control.StopSignal;
 
 var stop_signal: StopSignal = StopSignal.init();
-
 const static_path = if (builtin.mode == .Debug) "client/protonexus/dist" else "public";
+var start_time = std.atomic.Value(i64).init(0);
+var counter = std.atomic.Value(u64).init(0);
+var mediator: Mediator = Mediator.init(std.heap.page_allocator, 1024);
+// SAFETY: global_logger is initialized early in main() before use,
+// and is never accessed before being assigned a valid pointer.
+var global_logger: *nexlog.Logger = undefined;
 
 const App = struct {
     server: tk.Server,
@@ -30,45 +36,7 @@ const App = struct {
     }
 };
 
-var start_time = std.atomic.Value(i64).init(0);
-var counter = std.atomic.Value(u64).init(0);
-var mediator: Mediator = Mediator.init(std.heap.page_allocator, 1024);
-
-
-
-
-fn getPublicFolder() []const u8 {
-    if (builtin.mode == .Debug) return "client/protonexus/dist";
-    return "public";
-}
-
-pub fn myWorkerThread(logger: *nexlog.Logger) !void {
-    logger.info("Worker thread started", .{}, nexlog.here(@src()));
-    var count: u64 = 0;
-    const command_strings = [_][]const u8{ "speak", "shutup" };
-    while (!stop_signal.isSet()) {
-        // handle requests
-        std.time.sleep(1 * std.time.ns_per_s); // simulate work
-        // increment a counter
-        var value = counter.load(.seq_cst);
-        value += 1;
-        counter.store(value, .seq_cst);
-        try mediator.sendNotification(commands.DemoCommand, .{ .id = count, .verb = command_strings[count % 2] });
-        count = count + 1;
-
-        logger.info("Requesting random number", .{}, nexlog.here(@src()));
-
-        const response = try mediator.query_registry.query(
-            queries.RandomNumberQuery,
-            queries.RandomNumberQuery.Response,
-            .{ .min = 0, .max = 100 },
-        );
-
-        logger.info("Received random number: {d}", .{response.value}, nexlog.here(@src()));
-    }
-    logger.info("Worker thread exiting", .{}, nexlog.here(@src()));
-}
-
+/// TODO: These things should be in infrastructure.
 pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
     if (sig_num != std.posix.SIG.INT) {
         return;
@@ -81,9 +49,6 @@ pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
     stop_signal.requestStop();
 }
 
-// SAFETY: global_logger is initialized early in main() before use,
-// and is never accessed before being assigned a valid pointer.
-var global_logger: *nexlog.Logger = undefined;
 
 pub fn globalLog(
     comptime message_level: std.log.Level,
@@ -121,8 +86,6 @@ pub fn handleRandomNumberQuery(query: queries.RandomNumberQuery) queries.RandomN
 }
 
 pub fn start() !void {
-    // start worker threads
-    // start new thread
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     defer _ = gpa.deinit();
     const allocator = gpa.allocator();
@@ -141,19 +104,14 @@ pub fn start() !void {
     defer apiThread.join();
 
     var opc_service = OpcService.init(logger, &stop_signal);
+    var example_service = ExampleWorker.init(logger, &stop_signal, &mediator);
 
-    var myThread = try std.Thread.spawn(.{}, myWorkerThread, .{logger});
-    var opcThread = try opc_service.startWithThread();
-    defer myThread.join();
-    defer opcThread.join();
-    logger.info("Worker threaders started.", .{}, nexlog.here(@src()));
-    std.log.debug("TEST", .{});
-    std.log.err("err", .{});
-    std.log.warn("warn", .{});
-    std.log.info("info", .{});
-    std.log.debug("debug", .{});
+    var example_thread = try example_service.startWithThread();
+    defer example_thread.join();
 
-    // TODO: This needs to be crossplatform
+    var opc_thread = try opc_service.startWithThread();
+    defer opc_thread.join();
+
     switch (comptime builtin.target.os.tag) {
         .linux, .macos => {
             const action = std.posix.Sigaction{
