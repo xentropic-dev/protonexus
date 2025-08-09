@@ -1,0 +1,57 @@
+name: Build and Publish
+on:
+  push:
+    branches:
+      - main
+
+env:
+  ZIG_VERSION: 0.14.1
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - windows-latest
+        include:
+          - os: ubuntu-latest
+            install-deps: |
+              version="zig-x86_64-linux-$ZIG_VERSION"
+              echo "$version"
+              uri="https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
+              curl $uri -o zig-linux.tar.xz
+              tar -xf zig-linux.tar.xz 
+              rm zig-linux.tar.xz
+              mv $version zig
+              echo "Zig installed"
+              echo "$PWD/zig/" >> $GITHUB_PATH
+              ./zig/zig version
+          - os: windows-latest
+            install-deps: |
+              $version = "zig-x86_64-windows-$env:ZIG_VERSION"
+              Write-Output $version
+              $uri = "https://ziglang.org/download/$env:ZIG_VERSION/$version.zip"
+              Invoke-WebRequest -Uri "$uri" -OutFile ".\zig-windows.zip"
+              Expand-Archive -Path ".\zig-windows.zip" -DestinationPath ".\" -Force
+              Remove-Item -Path ".\zig-windows.zip"
+              Rename-Item -Path ".\$version" -NewName ".\zig"
+              Write-Host "Zig installed."
+              Add-Content -Path $env:GITHUB_ENV -Value "PATH=.\zig\`;$env:PATH"
+              .\zig\zig.exe version
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build executable
+        run: zig build --release=small 
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }}-zig-binary
+          path: zig-out/bin/*
+
