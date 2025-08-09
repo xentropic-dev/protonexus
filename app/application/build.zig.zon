@@ -1,0 +1,19 @@
+.{
+    .name = .application,
+    .version = "0.0.0",
+    .fingerprint = 0xa45bddc1c21144b3, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.14.0",
+    .dependencies = .{
+        .domain = .{ .path = "../domain" },
+        .conman = .{ .path = "../../pkg/conman" },
+        .nexlog = .{
+            .url = "git+https://github.com/chrischtel/nexlog/#9523a46ae7426893d42374d61287fcdfd1c76a22",
+            .hash = "nexlog-0.7.1-zfPDxMaAAgCZuQrYIX5ymFJKrEicP2a_k0WfW52VhZcW",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
