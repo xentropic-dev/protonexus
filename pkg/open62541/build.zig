@@ -26,8 +26,15 @@ pub fn build(b: *std.Build) void {
         .flags = &.{
             "-D__DATE__=\"1970-01-01\"",
             "-D__TIME__=\"00:00:00\"",
+            "-D_DARWIN_C_SOURCE",
+            "-D_POSIX_C_SOURCE=200112L",
+            "-std=c99",
         },
     });
+    if (target.result.os.tag == .macos) {
+        lib.linkFramework("System");
+        lib.linkSystemLibrary("resolv");
+    }
     lib.addIncludePath(mbedtls.path("vendor/include"));
     lib.addIncludePath(b.path("vendor"));
     lib.linkLibrary(mbedtls.artifact("mbedtls"));
