@@ -5,6 +5,16 @@ on:
 env:
   ZIG_VERSION: 0.14.1
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install zlint
+        run: curl -fsSL https://raw.githubusercontent.com/DonIsaac/zlint/refs/heads/main/tasks/install.sh | bash
+
+      - name: Run zlint
+        run: zlint
   unit_tests:
     name: Unit Tests
     runs-on: ${{ matrix.os }}
