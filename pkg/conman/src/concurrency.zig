@@ -100,6 +100,9 @@ pub fn RingBufferConcurrentQueue(comptime T: type) type {
             defer self.mutex.unlock();
             if (self.ring.isEmpty()) return error.QueueEmpty;
 
+            // SAFETY: The semaphore ensures there is an item available in the queue,
+            // so reading uninitialized `item` bytes here is safe as they will be
+            // immediately overwritten by `readFirst`.
             var item: T = undefined;
             const itemBytes = std.mem.asBytes(&item);
 

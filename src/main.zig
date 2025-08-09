@@ -213,6 +213,8 @@ pub fn handleSigInter(sig_num: c_int) callconv(.C) void {
     running.store(false, .seq_cst);
 }
 
+// SAFETY: global_logger is initialized early in main() before use,
+// and is never accessed before being assigned a valid pointer.
 var global_logger: *nexlog.Logger = undefined;
 
 pub fn global_log(
