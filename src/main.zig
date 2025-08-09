@@ -207,7 +207,7 @@ pub fn main() !void {
 
     // TODO: This needs to be crossplatform
     switch (comptime builtin.target.os.tag) {
-        .linux => {
+        .linux, .macos => {
             const action = std.posix.Sigaction{
                 .handler = .{ .handler = handleSigInter },
                 .mask = std.posix.empty_sigset,
