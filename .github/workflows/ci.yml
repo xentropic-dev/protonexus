@@ -2,6 +2,8 @@ name: Lint and Test
 on:
   - push
   - pull_request
+env:
+  ZIG_VERSION: 0.14.1
 jobs:
   unit_tests:
     name: Unit Tests
@@ -10,14 +12,26 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - ubuntu-latest
           - windows-latest
         include:
+          - os: ubuntu-latest
+            install-deps: |
+              version="zig-x86_64-windows-$ZIG_VERSION"
+              echo "$version"
+              uri = "https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
+              curl $uri -o zig-linux.tar.xz
+              tar -xf zig-linux.tar.xz 
+              rm zig-linux.tar.xz
+              mv $version zig
+              echo "Zig installed"
+              echo "$PWD/zig/" >> $GITHUB_PATH
+              zig version
           - os: windows-latest
             install-deps: |
-              $zigVersion = "0.14.1"
-              $version = "zig-x86_64-windows-$zigVersion"
+              $version = "zig-x86_64-windows-$ZIG_VERSION"
               Write-Output $version
-              $uri = "https://ziglang.org/download/$zigVersion/$version.zip"
+              $uri = "https://ziglang.org/download/$ZIG_VERSION/$version.zip"
               Invoke-WebRequest -Uri "$uri" -OutFile ".\zig-windows.zip"
               Expand-Archive -Path ".\zig-windows.zip" -DestinationPath ".\" -Force
               Remove-Item -Path ".\zig-windows.zip"
