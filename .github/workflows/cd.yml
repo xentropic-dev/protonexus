@@ -16,6 +16,7 @@ jobs:
         os:
           - ubuntu-latest
           - windows-latest
+          - macos-latest
         include:
           - os: ubuntu-latest
             install-deps: |
@@ -41,6 +42,19 @@ jobs:
               Write-Host "Zig installed."
               Add-Content -Path $env:GITHUB_ENV -Value "PATH=.\zig\`;$env:PATH"
               .\zig\zig.exe version
+          - os: macos-latest
+            install-deps: |
+              version="zig-x86_64-macos-$ZIG_VERSION"
+              echo "$version"
+              uri="https://ziglang.org/download/$ZIG_VERSION/$version.tar.xz"
+              curl $uri -o zig-macos.tar.xz
+              tar -xf zig-macos.tar.xz 
+              rm zig-macos.tar.xz
+              mv $version zig
+              echo "Zig installed"
+              echo "$PWD/zig/" >> $GITHUB_PATH
+              ./zig/zig version
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,6 +79,13 @@ jobs:
           npm ci
           npm run build
 
+      - name: Build web assets (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          cd client/protonexus
+          npm ci
+          npm run build
+
       - name: Build executable
         run: zig build --release=small 
 
@@ -84,6 +105,14 @@ jobs:
           New-Item -ItemType Directory -Force -Path artifact\protonexus
           Copy-Item zig-out\bin\protonexus.exe artifact\protonexus\
           Copy-Item -Recurse -Force client\protonexus\dist artifact\protonexus\public
+
+      - name: Prepare artifact staging directory (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          rm -rf artifact/protonexus
+          mkdir -p artifact/protonexus
+          cp zig-out/bin/protonexus artifact/protonexus/
+          cp -r client/protonexus/dist artifact/protonexus/public
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
